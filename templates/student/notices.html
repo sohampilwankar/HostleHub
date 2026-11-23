@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Notices{% endblock %}
+{% block content %}
+{{ m.page_header('Notices', 'Announcements from the hostel administration.') }}
+
+<div class="card">
+  <div class="card-body">
+    {% for n in notices %}
+      <article class="notice-item">
+        <div class="d-flex flex-wrap justify-content-between gap-2">
+          <h2 class="notice-title">{{ n.title }}</h2>
+          <span class="text-secondary small"><i class="bi bi-calendar3 me-1"></i>{{ n.created_at|date }}</span>
+        </div>
+        <p class="notice-text mb-0">{{ n.description }}</p>
+      </article>
+    {% else %}
+      {{ m.empty_state('megaphone', 'No notices have been published yet.') }}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

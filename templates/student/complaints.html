@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Complaints{% endblock %}
+{% block content %}
+{{ m.page_header('Complaints', 'Report hostel issues and track their resolution.') }}
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">New Complaint</div>
+      <div class="card-body">
+        <form method="post" novalidate class="needs-validation">
+          {{ m.csrf() }}
+          <div class="mb-3">
+            <label for="subject" class="form-label">Subject <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="subject" name="subject" maxlength="120" required placeholder="e.g. Fan not working">
+            <div class="invalid-feedback">Please enter a subject.</div>
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="description" name="description" rows="5" maxlength="1000" required placeholder="Describe the issue, including room number and location."></textarea>
+            <div class="invalid-feedback">Please describe the issue.</div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100"><i class="bi bi-send me-1"></i>Submit complaint</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header">My Complaints</div>
+      {% if complaints %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Subject</th><th>Submitted</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for c in complaints %}
+            <tr>
+              <td>
+                <div class="fw-medium">{{ c.subject }}</div>
+                <div class="text-secondary small">{{ c.description|truncate(90) }}</div>
+              </td>
+              <td class="text-nowrap">{{ c.created_at|date }}</td>
+              <td>{{ m.status_badge(c.status) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body">{{ m.empty_state('chat-left', 'You have not submitted any complaints.') }}</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

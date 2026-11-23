@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block public %}
+  <div class="auth-card card">
+    <div class="card-body p-4 p-sm-5">
+      <div class="text-center mb-4">
+        <span class="brand-mark brand-mark-lg"><i class="bi bi-buildings"></i></span>
+        <h1 class="h4 fw-semibold mt-3 mb-1">Welcome to HostelHub</h1>
+        <p class="text-secondary small mb-0">Online Hostel Management System</p>
+      </div>
+
+      {% include '_flashes.html' %}
+
+      <form method="post" action="{{ url_for('auth.login') }}" novalidate class="needs-validation">
+        {{ m.csrf() }}
+        <div class="role-toggle mb-3" role="group" aria-label="Login as">
+          <input type="radio" class="btn-check" name="role" id="role-student" value="student" {% if role != 'admin' %}checked{% endif %}>
+          <label class="btn" for="role-student"><i class="bi bi-mortarboard me-1"></i>Student</label>
+          <input type="radio" class="btn-check" name="role" id="role-admin" value="admin" {% if role == 'admin' %}checked{% endif %}>
+          <label class="btn" for="role-admin"><i class="bi bi-shield-lock me-1"></i>Administrator</label>
+        </div>
+
+        <div class="mb-3">
+          <label for="identifier" class="form-label" id="identifier-label">{{ 'Username' if role == 'admin' else 'Email address' }}</label>
+          <input type="text" class="form-control" id="identifier" name="identifier" required autofocus
+                 value="{{ request.form.identifier or request.args.email or '' }}" autocomplete="username">
+          <div class="invalid-feedback">This field is required.</div>
+        </div>
+        <div class="mb-4">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="password" name="password" required autocomplete="current-password">
+          <div class="invalid-feedback">Please enter your password.</div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Sign in</button>
+      </form>
+      <p class="text-secondary small text-center mt-4 mb-0" id="signup-prompt" {% if role == 'admin' %}hidden{% endif %}>
+        New student? <a href="{{ url_for('auth.signup') }}" class="fw-medium">Create an account</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}

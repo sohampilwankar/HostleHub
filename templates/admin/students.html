@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Students{% endblock %}
+{% block content %}
+{{ m.page_header('Student Management', 'Create student accounts and manage their details.') }}
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">{{ 'Edit Student' if edit else 'Add Student' }}</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('admin.students') }}" novalidate class="needs-validation">
+          {{ m.csrf() }}
+          {% if edit %}<input type="hidden" name="student_id" value="{{ edit.id }}">{% endif %}
+          <div class="mb-3">
+            <label for="name" class="form-label">Full name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="name" name="name" maxlength="100" required value="{{ edit.name if edit }}">
+            <div class="invalid-feedback">Name is required.</div>
+          </div>
+          <div class="mb-3">
+            <label for="student_code" class="form-label">Student ID / Enrollment No. <span class="text-danger">*</span></label>
+            <input type="text" class="form-control text-uppercase" id="student_code" name="student_code" minlength="3" maxlength="20" required value="{{ edit.student_code if edit }}">
+            <div class="invalid-feedback">Student ID is required (3–20 characters).</div>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" id="email" name="email" maxlength="120" required value="{{ edit.email if edit }}">
+            <div class="invalid-feedback">Enter a valid email address.</div>
+          </div>
+          <div class="mb-3">
+            <label for="year" class="form-label">Academic year <span class="text-danger">*</span></label>
+            <select class="form-select" id="year" name="year" required>
+              <option value="">Select year</option>
+              {% for y in years %}<option value="{{ y }}" {% if edit and edit.year == y %}selected{% endif %}>{{ y|year_label }}</option>{% endfor %}
+            </select>
+            <div class="invalid-feedback">Select an academic year.</div>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">{{ 'New password' if edit else 'Password' }} {% if not edit %}<span class="text-danger">*</span>{% endif %}</label>
+            <input type="password" class="form-control" id="password" name="password" minlength="6" {% if not edit %}required{% endif %} autocomplete="new-password">
+            <div class="form-text">{{ 'Leave blank to keep the current password.' if edit else 'Minimum 6 characters. Share it with the student.' }}</div>
+            <div class="invalid-feedback">Password must be at least 6 characters.</div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1">{{ 'Save changes' if edit else 'Add student' }}</button>
+            {% if edit %}<a href="{{ url_for('admin.students') }}" class="btn btn-outline-secondary">Cancel</a>{% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+        <span>All Students <span class="text-secondary fw-normal">({{ students|length }})</span></span>
+        <form method="get" class="d-flex gap-2" role="search">
+          <input type="search" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="Search name, email or ID">
+          <button class="btn btn-sm btn-outline-secondary" type="submit" aria-label="Search"><i class="bi bi-search"></i></button>
+        </form>
+      </div>
+      {% if students %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>ID</th><th>Name</th><th>Year</th><th>Room</th><th class="text-end">Actions</th></tr></thead>
+          <tbody>
+          {% for s in students %}
+            <tr>
+              <td class="text-secondary text-nowrap">{{ s.student_code }}</td>
+              <td>
+                <div class="fw-medium">{{ s.name }}{{ m.demo_badge(s.email) }}</div>
+                <div class="text-secondary small">{{ s.email }}</div>
+              </td>
+              <td class="text-nowrap">{{ s.year|year_label }}</td>
+              <td class="text-nowrap">
+                {% if s.allocation_id %}
+                  {{ s.block }}-{{ s.room_number }}
+                  <form method="post" action="{{ url_for('admin.vacate', allocation_id=s.allocation_id) }}" class="d-inline" data-confirm="Vacate {{ s.name }} from room {{ s.block }}-{{ s.room_number }}?">
+                    {{ m.csrf() }}
+                    <button class="btn btn-link btn-sm p-0 ms-1 text-danger" type="submit">Vacate</button>
+                  </form>
+                {% else %}<span class="text-secondary">—</span>{% endif %}
+              </td>
+              <td class="text-end text-nowrap">
+                <a href="{{ url_for('admin.students', edit=s.id) }}" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="bi bi-pencil"></i><span class="visually-hidden">Edit</span></a>
+                {{ m.delete_button(url_for('admin.delete_student', student_id=s.id), confirm='Delete ' ~ s.name ~ ' and all their records?',
+                                   disabled=s.allocation_id is not none, title='Vacate room before deleting' if s.allocation_id else 'Delete') }}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body">{{ m.empty_state('people', 'No students found.' if q else 'No students yet. Add the first student using the form.') }}</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

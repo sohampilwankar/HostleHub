@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Notices{% endblock %}
+{% block content %}
+{{ m.page_header('Notice Management', 'Publish announcements visible to all students.') }}
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">{{ 'Edit Notice' if edit else 'New Notice' }}</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('admin.notices') }}" novalidate class="needs-validation">
+          {{ m.csrf() }}
+          {% if edit %}<input type="hidden" name="notice_id" value="{{ edit.id }}">{% endif %}
+          <div class="mb-3">
+            <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="title" name="title" maxlength="150" required value="{{ edit.title if edit }}">
+            <div class="invalid-feedback">Title is required.</div>
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="description" name="description" rows="6" maxlength="2000" required>{{ edit.description if edit }}</textarea>
+            <div class="invalid-feedback">Description is required.</div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-megaphone me-1"></i>{{ 'Save changes' if edit else 'Publish notice' }}</button>
+            {% if edit %}<a href="{{ url_for('admin.notices') }}" class="btn btn-outline-secondary">Cancel</a>{% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">Published Notices <span class="text-secondary fw-normal">({{ notices|length }})</span></div>
+      <div class="card-body">
+        {% for n in notices %}
+          <article class="notice-item">
+            <div class="d-flex justify-content-between gap-2">
+              <div>
+                <h2 class="notice-title">{{ n.title }}</h2>
+                <div class="text-secondary small mb-1">{{ n.created_at|date(true) }}</div>
+              </div>
+              <div class="text-nowrap">
+                <a href="{{ url_for('admin.notices', edit=n.id) }}" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="bi bi-pencil"></i><span class="visually-hidden">Edit</span></a>
+                {{ m.delete_button(url_for('admin.delete_notice', notice_id=n.id), confirm='Delete this notice?') }}
+              </div>
+            </div>
+            <p class="notice-text mb-0">{{ n.description }}</p>
+          </article>
+        {% else %}
+          {{ m.empty_state('megaphone', 'No notices published yet.') }}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

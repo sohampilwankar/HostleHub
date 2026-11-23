@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Rooms{% endblock %}
+{% block content %}
+{{ m.page_header('Room Management', 'Add rooms, set capacity and monitor bed occupancy.') }}
+
+<div class="row g-3 mb-3 row-cols-1 row-cols-sm-3">
+  <div class="col">{{ m.stat_card('Usable Beds', totals.capacity, 'grid-3x3-gap', 'Under current policy') }}</div>
+  <div class="col">{{ m.stat_card('Occupied Beds', totals.occupied, 'person-check') }}</div>
+  <div class="col">{{ m.stat_card('Available Beds', totals.available, 'door-open') }}</div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">{{ 'Edit Room' if edit else 'Add Room' }}</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('admin.rooms') }}" novalidate class="needs-validation">
+          {{ m.csrf() }}
+          {% if edit %}<input type="hidden" name="room_id" value="{{ edit.id }}">{% endif %}
+          <div class="row g-3">
+            <div class="col-6">
+              <label for="block" class="form-label">Block <span class="text-danger">*</span></label>
+              <input type="text" class="form-control text-uppercase" id="block" name="block" maxlength="10" required placeholder="A" value="{{ edit.block if edit }}">
+              <div class="invalid-feedback">Required.</div>
+            </div>
+            <div class="col-6">
+              <label for="room_number" class="form-label">Room no. <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="room_number" name="room_number" maxlength="10" required placeholder="101" value="{{ edit.room_number if edit }}">
+              <div class="invalid-feedback">Required.</div>
+            </div>
+            <div class="col-7">
+              <label for="room_type" class="form-label">Room type <span class="text-danger">*</span></label>
+              <select class="form-select" id="room_type" name="room_type" required data-capacity-target="#capacity">
+                <option value="">Select</option>
+                {% for t in room_types %}<option value="{{ t }}" {% if edit and edit.room_type == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+              </select>
+              <div class="invalid-feedback">Required.</div>
+            </div>
+            <div class="col-5">
+              <label for="capacity" class="form-label">Capacity <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" id="capacity" name="capacity" min="{{ edit.occupied if edit and edit.occupied > 0 else 1 }}" max="{{ policies.max_room_capacity }}" required value="{{ edit.capacity if edit }}" data-max="{{ policies.max_room_capacity }}">
+              <div class="invalid-feedback">1–{{ policies.max_room_capacity }}</div>
+            </div>
+          </div>
+          <div class="form-text mt-2">Maximum room capacity policy: <strong>{{ policies.max_room_capacity }}</strong> beds. <a href="{{ url_for('admin.policies') }}">Change</a></div>
+          <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-primary flex-grow-1">{{ 'Save changes' if edit else 'Add room' }}</button>
+            {% if edit %}<a href="{{ url_for('admin.rooms') }}" class="btn btn-outline-secondary">Cancel</a>{% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header">All Rooms <span class="text-secondary fw-normal">({{ rooms|length }})</span></div>
+      {% if rooms %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Room</th><th>Type</th><th>Occupancy</th><th>Available</th><th>Residents</th><th class="text-end">Actions</th></tr></thead>
+          <tbody>
+          {% for r in rooms %}
+            <tr>
+              <td class="fw-medium text-nowrap">{{ r.block }}-{{ r.room_number }}</td>
+              <td>{{ r.room_type }}</td>
+              <td style="min-width: 130px">
+                <div class="d-flex justify-content-between small"><span>{{ r.occupied }} / {{ r.capacity }}</span></div>
+                <div class="progress occupancy" role="progressbar" aria-valuenow="{{ r.occupied }}" aria-valuemin="0" aria-valuemax="{{ r.capacity }}">
+                  <div class="progress-bar {% if r.available == 0 %}bg-secondary{% endif %}" style="width: {{ (100 * r.occupied / r.capacity)|round|int }}%"></div>
+                </div>
+                {% if r.effective < r.capacity %}<div class="text-warning-emphasis small mt-1" title="Maximum room capacity policy">Policy limit: {{ r.effective }}</div>{% endif %}
+              </td>
+              <td>{% if r.available %}<span class="fw-medium">{{ r.available }}</span>{% else %}{{ m.status_badge('Full') }}{% endif %}</td>
+              <td class="small text-secondary">{{ r.occupants or '—' }}</td>
+              <td class="text-end text-nowrap">
+                <a href="{{ url_for('admin.rooms', edit=r.id) }}" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="bi bi-pencil"></i><span class="visually-hidden">Edit</span></a>
+                {{ m.delete_button(url_for('admin.delete_room', room_id=r.id), confirm='Delete room ' ~ r.block ~ '-' ~ r.room_number ~ '?',
+                                   disabled=r.occupied > 0, title='Only vacant rooms can be deleted' if r.occupied else 'Delete') }}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body">{{ m.empty_state('building', 'No rooms yet. Add the first room using the form.') }}</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

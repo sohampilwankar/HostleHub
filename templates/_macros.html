@@ -1,0 +1,53 @@
+{% macro csrf() -%}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{%- endmacro %}
+
+{% macro page_header(title, subtitle='') -%}
+<div class="page-header">
+  <h1 class="page-title">{{ title }}</h1>
+  {% if subtitle %}<p class="page-subtitle">{{ subtitle }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro status_badge(status) -%}
+{% set styles = {
+  'Pending': 'warning', 'Approved': 'info', 'Allocated': 'success', 'Rejected': 'danger',
+  'Submitted': 'secondary', 'In Progress': 'primary', 'Resolved': 'success',
+  'Active': 'success', 'Vacated': 'secondary', 'Open': 'success', 'Closed': 'danger'
+} %}
+{% set s = styles.get(status, 'secondary') %}
+<span class="badge status-badge bg-{{ s }}-subtle text-{{ s }}-emphasis border border-{{ s }}-subtle">{{ status }}</span>
+{%- endmacro %}
+
+{% macro stat_card(label, value, icon, hint='') -%}
+<div class="card stat-card h-100">
+  <div class="card-body d-flex align-items-center gap-3">
+    <div class="stat-icon"><i class="bi bi-{{ icon }}"></i></div>
+    <div>
+      <div class="stat-label">{{ label }}</div>
+      <div class="stat-value">{{ value }}</div>
+      {% if hint %}<div class="stat-hint">{{ hint }}</div>{% endif %}
+    </div>
+  </div>
+</div>
+{%- endmacro %}
+
+{% macro empty_state(icon, text) -%}
+<div class="empty-state">
+  <i class="bi bi-{{ icon }}"></i>
+  <p>{{ text }}</p>
+</div>
+{%- endmacro %}
+
+{% macro demo_badge(email) -%}
+{% if is_demo(email) %}<span class="badge text-bg-light border ms-1" title="Demo record">Demo</span>{% endif %}
+{%- endmacro %}
+
+{% macro delete_button(action, label='Delete', confirm='Are you sure?', disabled=false, title='') -%}
+<form method="post" action="{{ action }}" class="d-inline" data-confirm="{{ confirm }}">
+  {{ csrf() }}
+  <button type="submit" class="btn btn-sm btn-outline-danger" {% if disabled %}disabled{% endif %} title="{{ title or label }}">
+    <i class="bi bi-trash"></i><span class="visually-hidden">{{ label }}</span>
+  </button>
+</form>
+{%- endmacro %}

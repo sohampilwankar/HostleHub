@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+{{ m.page_header('Admin Dashboard', 'Overview of hostel occupancy, applications and complaints.') }}
+
+<div class="row g-3 mb-4 row-cols-1 row-cols-sm-2 row-cols-xl-5">
+  <div class="col">{{ m.stat_card('Total Students', stats.students, 'people') }}</div>
+  <div class="col">{{ m.stat_card('Total Rooms', stats.rooms, 'building') }}</div>
+  <div class="col">{{ m.stat_card('Available Beds', stats.available_beds, 'grid-3x3-gap', 'Max ' ~ policies.max_room_capacity ~ ' per room') }}</div>
+  <div class="col">{{ m.stat_card('Pending Applications', stats.pending, 'hourglass-split') }}</div>
+  <div class="col">{{ m.stat_card('Open Complaints', stats.open_complaints, 'chat-left-text') }}</div>
+</div>
+
+{% set reg = charts.registrations %}
+{% set occ = charts.occupancy %}
+<div class="row g-3 mb-3">
+  <div class="col-xl-8">
+    <div class="card h-100">
+      <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Student Registrations</span>
+        <span class="text-secondary small fw-normal">New accounts per day · last 30 days</span>
+      </div>
+      <div class="card-body">
+        <div class="row g-2 mb-3 mini-stats">
+          <div class="col-6 col-md-3"><div class="mini-stat"><div class="mini-label">Registered students</div><div class="mini-value">{{ reg.total }}</div></div></div>
+          <div class="col-6 col-md-3"><div class="mini-stat"><div class="mini-label">New today</div><div class="mini-value">{{ reg.today }}</div></div></div>
+          <div class="col-6 col-md-3"><div class="mini-stat"><div class="mini-label">Last 7 days</div><div class="mini-value">{{ reg.last7 }}</div></div></div>
+          <div class="col-6 col-md-3"><div class="mini-stat"><div class="mini-label">Last 30 days</div><div class="mini-value">{{ reg.last30 }}</div></div></div>
+        </div>
+        <div class="chart-box">
+          <canvas id="chart-registrations" role="img"
+                  aria-label="Bar chart of new student registrations per day over the last 30 days: {{ reg.last30 }} in total, {{ reg.last7 }} in the last 7 days."></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Room Occupancy</span>
+        <a href="{{ url_for('admin.rooms') }}" class="small fw-normal">Rooms</a>
+      </div>
+      <div class="card-body d-flex flex-column">
+        <div class="chart-box chart-box-doughnut">
+          <canvas id="chart-occupancy" role="img"
+                  aria-label="Doughnut chart: {{ occ.occupied }} occupied beds and {{ occ.available }} available beds."></canvas>
+        </div>
+        <ul class="chart-legend mt-3">
+          <li><span class="swatch swatch-primary"></span>Occupied beds<strong>{{ occ.occupied }}</strong></li>
+          <li><span class="swatch swatch-soft"></span>Available beds<strong>{{ occ.available }}</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Applications by Status</span>
+        <span class="text-secondary small fw-normal">{{ charts.applications['values']|sum }} total</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-box chart-box-sm">
+          <canvas id="chart-applications" role="img"
+                  aria-label="Bar chart of applications by status: {% for l in charts.applications.labels %}{{ l }} {{ charts.applications['values'][loop.index0] }}{{ ', ' if not loop.last }}{% endfor %}."></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Complaints by Status</span>
+        <span class="text-secondary small fw-normal">{{ charts.complaints['values']|sum }} total</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-box chart-box-sm">
+          <canvas id="chart-complaints" role="img"
+                  aria-label="Bar chart of complaints by status: {% for l in charts.complaints.labels %}{{ l }} {{ charts.complaints['values'][loop.index0] }}{{ ', ' if not loop.last }}{% endfor %}."></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Pending Applications</span>
+        <a href="{{ url_for('admin.applications', status='Pending') }}" class="small">Manage</a>
+      </div>
+      {% if recent_apps %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Student</th><th>Year</th><th>Room type</th><th>Date</th></tr></thead>
+          <tbody>
+          {% for a in recent_apps %}{% set p = a.preferences|prefs %}
+            <tr>
+              <td>{{ a.name }}{% if a.year == policies.priority_year %} <span class="badge bg-primary-subtle text-primary-emphasis">Priority</span>{% endif %}</td>
+              <td>{{ a.year|year_label }}</td><td>{{ p.room_type }}</td><td class="text-nowrap">{{ a.application_date|date }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}<div class="card-body">{{ m.empty_state('check2-circle', 'No pending applications.') }}</div>{% endif %}
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Open Complaints</span>
+        <a href="{{ url_for('admin.complaints') }}" class="small">Manage</a>
+      </div>
+      {% if recent_complaints %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Subject</th><th>Student</th><th>Status</th></tr></thead>
+          <tbody>
+          {% for c in recent_complaints %}
+            <tr><td>{{ c.subject|truncate(40) }}</td><td>{{ c.name }}</td><td>{{ m.status_badge(c.status) }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}<div class="card-body">{{ m.empty_state('check2-circle', 'No open complaints.') }}</div>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script id="dashboard-data" type="application/json">{{ charts|tojson }}</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

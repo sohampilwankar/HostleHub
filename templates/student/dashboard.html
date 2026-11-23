@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+{{ m.page_header('Welcome, ' ~ g.user.name, 'Here is an overview of your hostel status.') }}
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-4">
+    {{ m.stat_card('Room Allocation',
+                   (allocation.block ~ '-' ~ allocation.room_number) if allocation else 'Not allocated',
+                   'door-open', allocation.room_type ~ ' room' if allocation else '') }}
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <div class="card stat-card h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
+        <div>
+          <div class="stat-label">Application Status</div>
+          <div class="stat-value">{% if application %}{{ m.status_badge(application.status) }}{% else %}<span class="fs-6 text-secondary">No application</span>{% endif %}</div>
+          {% if application %}<div class="stat-hint">Submitted {{ application.application_date|date }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-12 col-xl-4">
+    {{ m.stat_card('Open Complaints', open_complaints, 'chat-left-text', 'Submitted or in progress') }}
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Recent Notices</span>
+        <a href="{{ url_for('student.notices') }}" class="small">View all</a>
+      </div>
+      <div class="card-body">
+        {% for n in notices %}
+          <div class="notice-item">
+            <div class="d-flex justify-content-between gap-2">
+              <h3 class="notice-title">{{ n.title }}</h3>
+              <span class="text-secondary small text-nowrap">{{ n.created_at|date }}</span>
+            </div>
+            <p class="notice-text mb-0">{{ n.description|truncate(160) }}</p>
+          </div>
+        {% else %}
+          {{ m.empty_state('megaphone', 'No notices have been published yet.') }}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header">Quick Actions</div>
+      <div class="card-body d-grid gap-2">
+        <a href="{{ url_for('student.apply_room') }}" class="quick-link"><i class="bi bi-file-earmark-plus"></i>Apply for a room<i class="bi bi-chevron-right ms-auto"></i></a>
+        <a href="{{ url_for('student.allocation') }}" class="quick-link"><i class="bi bi-door-open"></i>View my allocation<i class="bi bi-chevron-right ms-auto"></i></a>
+        <a href="{{ url_for('student.complaints') }}" class="quick-link"><i class="bi bi-chat-left-text"></i>Raise a complaint<i class="bi bi-chevron-right ms-auto"></i></a>
+        <a href="{{ url_for('student.profile') }}" class="quick-link"><i class="bi bi-person"></i>My profile<i class="bi bi-chevron-right ms-auto"></i></a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

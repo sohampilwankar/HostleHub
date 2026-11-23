@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Apply for Room{% endblock %}
+{% block content %}
+{{ m.page_header('Apply for Room', 'Submit your hostel room application for the current academic year.') }}
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header">Room Application Form</div>
+      <div class="card-body">
+        {% if blocker %}
+          <div class="alert alert-warning d-flex gap-2 mb-0"><i class="bi bi-info-circle mt-1"></i><div>{{ blocker }}</div></div>
+        {% else %}
+        <form method="post" novalidate class="needs-validation">
+          {{ m.csrf() }}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Full name</label>
+              <input type="text" class="form-control" value="{{ g.user.name }}" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="text" class="form-control" value="{{ g.user.email }}" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Academic year</label>
+              <input type="text" class="form-control" value="{{ g.user.year|year_label }}" readonly>
+              <div class="form-text">Contact the hostel office if this is incorrect.</div>
+            </div>
+            <div class="col-md-6">
+              <label for="room_type" class="form-label">Preferred room type <span class="text-danger">*</span></label>
+              <select class="form-select" id="room_type" name="room_type" required>
+                <option value="">Select room type</option>
+                {% for t in room_types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+              </select>
+              <div class="invalid-feedback">Please select a room type.</div>
+            </div>
+            <div class="col-md-6">
+              <label for="block" class="form-label">Preferred hostel block <span class="text-secondary">(optional)</span></label>
+              <select class="form-select" id="block" name="block">
+                <option value="">No preference</option>
+                {% for b in blocks %}<option value="{{ b }}">Block {{ b }}</option>{% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="mt-4">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>Submit application</button>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">Current Hostel Rules</div>
+      <ul class="list-group list-group-flush small">
+        <li class="list-group-item d-flex justify-content-between">Applications {{ m.status_badge('Open' if policies.applications_open else 'Closed') }}</li>
+        <li class="list-group-item d-flex justify-content-between">Eligible from <strong>{{ policies.min_year|year_label }}</strong></li>
+        <li class="list-group-item d-flex justify-content-between">Priority year <strong>{{ policies.priority_year|year_label if policies.priority_year else 'None' }}</strong></li>
+        <li class="list-group-item d-flex justify-content-between">Max. beds per room <strong>{{ policies.max_room_capacity }}</strong></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header">My Applications</div>
+  {% if history %}
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>#</th><th>Date</th><th>Room type</th><th>Block</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for a in history %}{% set p = a.preferences|prefs %}
+        <tr>
+          <td>{{ a.id }}</td>
+          <td>{{ a.application_date|date }}</td>
+          <td>{{ p.room_type }}</td>
+          <td>{{ p.block or 'Any' }}</td>
+          <td>{{ m.status_badge(a.status) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card-body">{{ m.empty_state('file-earmark', 'You have not submitted any applications yet.') }}</div>
+  {% endif %}
+</div>
+{% endblock %}

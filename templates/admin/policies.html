@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Policies & Rules{% endblock %}
+{% block content %}
+{{ m.page_header('Policies & Rules', 'Update hostel allocation rules. Changes apply immediately to all subsequent operations.') }}
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">Allocation Policies</div>
+      <div class="card-body">
+        <form method="post" novalidate class="needs-validation">
+          {{ m.csrf() }}
+          <div class="policy-row">
+            <div>
+              <label for="max_room_capacity" class="form-label mb-0">Maximum room capacity</label>
+              <div class="form-text mt-0">Upper limit on beds that can be filled in any room. Rooms cannot be created above this, and allocations stop at this limit.</div>
+            </div>
+            <input type="number" class="form-control policy-input" id="max_room_capacity" name="max_room_capacity" min="1" max="10" required value="{{ policies.max_room_capacity }}">
+          </div>
+          <div class="policy-row">
+            <div>
+              <label for="priority_year" class="form-label mb-0">Priority academic year</label>
+              <div class="form-text mt-0">Applications from this year are listed first and flagged for the administrator.</div>
+            </div>
+            <select class="form-select policy-input" id="priority_year" name="priority_year">
+              <option value="0" {% if not policies.priority_year %}selected{% endif %}>None</option>
+              {% for y in years %}<option value="{{ y }}" {% if policies.priority_year == y %}selected{% endif %}>{{ y|year_label }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="policy-row">
+            <div>
+              <label for="applications_open" class="form-label mb-0">Application availability</label>
+              <div class="form-text mt-0">When closed, students cannot submit new room applications.</div>
+            </div>
+            <select class="form-select policy-input" id="applications_open" name="applications_open">
+              <option value="Open" {% if policies.applications_open %}selected{% endif %}>Open</option>
+              <option value="Closed" {% if not policies.applications_open %}selected{% endif %}>Closed</option>
+            </select>
+          </div>
+          <div class="policy-row">
+            <div>
+              <label for="min_year" class="form-label mb-0">Minimum eligible academic year</label>
+              <div class="form-text mt-0">Students below this year cannot apply for a room.</div>
+            </div>
+            <select class="form-select policy-input" id="min_year" name="min_year">
+              {% for y in years %}<option value="{{ y }}" {% if policies.min_year == y %}selected{% endif %}>{{ y|year_label }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mt-4"><button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Save policies</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">Current Rules in Effect</div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item d-flex justify-content-between">Max. beds per room <strong>{{ policies.max_room_capacity }}</strong></li>
+        <li class="list-group-item d-flex justify-content-between">Priority year <strong>{{ policies.priority_year|year_label if policies.priority_year else 'None' }}</strong></li>
+        <li class="list-group-item d-flex justify-content-between">Applications {{ m.status_badge('Open' if policies.applications_open else 'Closed') }}</li>
+        <li class="list-group-item d-flex justify-content-between">Eligible from <strong>{{ policies.min_year|year_label }}</strong></li>
+      </ul>
+      <div class="card-footer small text-secondary">Policies are stored in the database and read on every request — no restart needed.</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

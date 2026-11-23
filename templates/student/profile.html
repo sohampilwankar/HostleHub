@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+{{ m.page_header('My Profile', 'Your registered student details.') }}
+
+<div class="card" style="max-width: 640px">
+  <div class="card-body">
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <span class="avatar avatar-lg">{{ g.user.name[:1]|upper }}</span>
+      <div>
+        <div class="fs-5 fw-semibold">{{ g.user.name }}</div>
+        <div class="text-secondary small">{{ g.user.email }}</div>
+      </div>
+    </div>
+    <dl class="row mb-0 profile-list">
+      <dt class="col-sm-4">Student name</dt><dd class="col-sm-8">{{ g.user.name }}</dd>
+      <dt class="col-sm-4">Student ID</dt><dd class="col-sm-8">{{ g.user.student_code }}</dd>
+      <dt class="col-sm-4">Email</dt><dd class="col-sm-8">{{ g.user.email }}</dd>
+      <dt class="col-sm-4">Academic year</dt><dd class="col-sm-8">{{ g.user.year|year_label }}</dd>
+      <dt class="col-sm-4">Registered on</dt><dd class="col-sm-8">{{ g.user.created_at|date }}</dd>
+      <dt class="col-sm-4">Room</dt><dd class="col-sm-8">{{ (allocation.block ~ '-' ~ allocation.room_number ~ ' (' ~ allocation.room_type ~ ')') if allocation else 'Not allocated' }}</dd>
+    </dl>
+    <p class="text-secondary small mt-4 mb-0"><i class="bi bi-info-circle me-1"></i>To correct any details, please contact the hostel office.</p>
+  </div>
+</div>
+{% endblock %}
