@@ -2,6 +2,10 @@
 
 A web portal for running a college hostel. Students apply for rooms, check their allocation, raise complaints and read notices. Administrators manage students, rooms, applications, complaints, notices and the hostel allocation policies.
 
+**🌐 Live site: [sohampilwankar.pythonanywhere.com](https://sohampilwankar.pythonanywhere.com)**
+
+To try it as a student, click **Create an account** on the login page. The live site's administrator password is private; the default `admin123` below applies only to a local installation.
+
 **Stack:** HTML5, CSS3, JavaScript, Bootstrap 5 · Python, Flask · SQLite (`sqlite3`) · Flask sessions, Werkzeug password hashing, Flask-WTF CSRF protection.
 
 ---
@@ -36,7 +40,7 @@ Open **http://127.0.0.1:5000** in the browser.
 
 | Role | Login ID | Password |
 |------|----------|----------|
-| Administrator (default) | `admin` | `admin123` |
+| Administrator (default, local only) | `admin` | `admin123` |
 | Demo students (only with `--demo`) | `aarav@demo.hostelhub.local`, `priya@…`, `rohan@…`, `sneha@…` | `student123` |
 
 Change the default admin password before any real use.
