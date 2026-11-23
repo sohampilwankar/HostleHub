@@ -793,6 +793,8 @@ def create_app(test_config=None):
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
         PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
+        # Set HOSTELHUB_HTTPS=1 on an HTTPS deployment so cookies are never sent over plain HTTP.
+        SESSION_COOKIE_SECURE=os.environ.get("HOSTELHUB_HTTPS") == "1",
     )
     if test_config:
         app.config.update(test_config)
@@ -898,6 +900,24 @@ def create_app(test_config=None):
                 click.echo(f"Demo data added. Demo student password: {dbm.DEMO_PASSWORD}")
             else:
                 click.echo("Demo data already present - skipped.")
+
+    @app.cli.command("set-admin-password")
+    @click.option("--username", default=dbm.DEFAULT_ADMIN[0], show_default=True)
+    @click.password_option(prompt="New admin password")
+    def set_admin_password(username, password):
+        """Change an administrator's password (use on any public deployment)."""
+        if len(password) < 8:
+            raise click.ClickException("Password must be at least 8 characters.")
+        conn = dbm.connect(app.config["DATABASE"])
+        try:
+            cur = conn.execute("UPDATE admins SET password = ? WHERE username = ?",
+                               (generate_password_hash(password), username))
+            conn.commit()
+        finally:
+            conn.close()
+        if cur.rowcount == 0:
+            raise click.ClickException(f"No administrator named '{username}'.")
+        click.echo(f"Password updated for administrator '{username}'.")
 
     return app
 

@@ -160,3 +160,46 @@ The 31 automated tests use a temporary database, so `hostel.db` is never touched
 | 3 | Admin dashboard, students, rooms, approval and allocation | `admin/dashboard`, `students`, `rooms`, `applications`, `allocate_room()` |
 | 4 | Complaints, notices, policies | `complaints`, `notices`, `policies` (student and admin) |
 | 5 | Integration, testing, bug fixing, UI polish | `tests/test_app.py`, `style.css`, error pages, CSRF handling |
+
+---
+
+## 7. Deployment (PythonAnywhere)
+
+PythonAnywhere is recommended because SQLite needs a disk that persists. Its free tier keeps `hostel.db` between restarts. Hosts with temporary disks, such as the free tiers of Render or Railway, wipe the database on every redeploy.
+
+1. Create a free account at https://www.pythonanywhere.com. Open **Consoles → Bash** and run:
+   ```bash
+   git clone https://github.com/sohampilwankar/HostleHub.git
+   cd HostleHub
+   python3.13 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   flask --app app init-db             # add --demo for sample data
+   flask --app app set-admin-password  # REQUIRED: replace the public default password
+   ```
+2. **Web** tab → **Add a new web app** → **Manual configuration** → **Python 3.13**.
+3. On the Web tab, set:
+   - **Source code:** `/home/<username>/HostleHub`
+   - **Virtualenv:** `/home/<username>/HostleHub/.venv`
+   - **Static files:** URL `/static/` → directory `/home/<username>/HostleHub/static`
+   - **Force HTTPS:** enabled
+4. Open the **WSGI configuration file** link, replace its contents with the following, and save:
+   ```python
+   import os, sys
+   path = "/home/<username>/HostleHub"
+   if path not in sys.path:
+       sys.path.insert(0, path)
+   os.environ["HOSTELHUB_HTTPS"] = "1"
+   from wsgi import application  # noqa
+   ```
+5. Click **Reload**. The site is at `https://<username>.pythonanywhere.com`.
+
+**Updating the live site** after you push changes to GitHub:
+```bash
+cd ~/HostleHub && git pull && source .venv/bin/activate && pip install -r requirements.txt
+```
+Then click **Reload** on the Web tab. `git pull` never touches `hostel.db`, so no data is lost. Database changes are applied automatically when the app reloads.
+
+**Backups:** download `hostel.db` from the **Files** tab from time to time.
+
+Free-tier notes: you must click "Run until 3 months from today" on the Web tab every 3 months, or the app is disabled. The CDN libraries used (Bootstrap, Chart.js, Google Fonts) are loaded by the visitor's browser, so the free tier's outbound internet restrictions don't affect them.

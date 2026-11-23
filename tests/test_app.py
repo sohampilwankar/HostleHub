@@ -437,6 +437,15 @@ class HostelHubTestCase(unittest.TestCase):
         # logged-in users are sent to their dashboard instead of the signup form
         self.assertEqual(self.client.get("/signup").status_code, 302)
 
+    def test_set_admin_password_command(self):
+        runner = self.app.test_cli_runner()
+        result = runner.invoke(args=["set-admin-password", "--password", "short"])
+        self.assertNotEqual(result.exit_code, 0)
+        result = runner.invoke(args=["set-admin-password", "--password", "N3wSecret!"])
+        self.assertEqual(result.exit_code, 0, result.output)
+        self.assertIn(b"Invalid credentials", self.login_admin().data)  # old password gone
+        self.assertIn(b"Admin Dashboard", self.login("admin", "N3wSecret!", "admin").data)
+
     # ------------------------------------------------------- dashboard charts
     def test_dashboard_chart_data_matches_database(self):
         self.signup()
