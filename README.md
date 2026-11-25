@@ -2,10 +2,6 @@
 
 A web portal for running a college hostel. Students apply for rooms, check their allocation, raise complaints and read notices. Administrators manage students, rooms, applications, complaints, notices and the hostel allocation policies.
 
-**🌐 Live site: [sohampilwankar.pythonanywhere.com](https://sohampilwankar.pythonanywhere.com)**
-
-To try it as a student, click **Create an account** on the login page. The live site's administrator password is private; the default `admin123` below applies only to a local installation.
-
 **Stack:** HTML5, CSS3, JavaScript, Bootstrap 5 · Python, Flask · SQLite (`sqlite3`) · Flask sessions, Werkzeug password hashing, Flask-WTF CSRF protection.
 
 ---
@@ -198,7 +194,7 @@ PythonAnywhere is recommended because SQLite needs a disk that persists. Its fre
    ```
 5. Click **Reload**. The site is at `https://<username>.pythonanywhere.com`.
 
-**Updating the live site** after you push changes to GitHub:
+**Updating a deployed site** after you push changes to GitHub:
 ```bash
 cd ~/HostleHub && git pull && source .venv/bin/activate && pip install -r requirements.txt
 ```
